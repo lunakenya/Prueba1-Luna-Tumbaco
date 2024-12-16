@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat en Tiempo Real</title>
+</head>
+<body>
+    <h1>Chat en Tiempo Real</h1>
+    <div id="chat" style="border: 1px solid black; height: 300px; overflow-y: scroll; padding: 10px;">
+        <!-- Mensajes se mostrarán aquí -->
+    </div>
+    <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." />
+    <button onclick="sendMessage()">Enviar</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const chatDiv = document.getElementById('chat');
+        const messageInput = document.getElementById('messageInput');
+
+        // Recibir mensajes previos
+        socket.on('previousMessages', (messages) => {
+            messages.forEach((msg) => displayMessage(msg));
+        });
+
+        // Escuchar nuevos mensajes
+        socket.on('message', (msg) => {
+            displayMessage(msg);
+        });
+
+        // Función para enviar un mensaje
+        function sendMessage() {
+            const content = messageInput.value;
+            if (content.trim() !== '') {
+                socket.emit('sendMessage', content);
+                messageInput.value = '';
+            }
+        }
+
+        // Función para mostrar mensajes en la interfaz
+        function displayMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.innerHTML = `<strong>${message.sender}:</strong> ${message.content} <em>(${new Date(message.timestamp).toLocaleTimeString()})</em>`;
+            chatDiv.appendChild(messageElement);
+            chatDiv.scrollTop = chatDiv.scrollHeight; // Hacer scroll automático
+        }
+    </script>
+</body>
+</html>
