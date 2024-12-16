@@ -15,3 +15,12 @@ This project is a simple real-time chat application developed using **Node.js**,
 
 ---
 
+
+---
+
+## 🛠️ **Installation and Execution**
+
+### 1. **Clone the Repository**
+```bash
+git clone https://github.com/lunakenya/Prueba1-Luna-Tumbaco.git
+
