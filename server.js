@@ -11,15 +11,33 @@ const io = new Server(server);
 // Servir el frontend desde la carpeta Front-End
 app.use(express.static(path.join(__dirname, 'Front-End')));
 
-// Cola en memoria para almacenar los mensajes
-const messageQueue = [];
+// Cola FIFO en memoria para los mensajes
+class MessageQueue {
+    constructor() {
+        this.queue = [];
+    }
+
+    enqueue(message) {
+        this.queue.push(message); // Agregar mensaje al final de la cola
+    }
+
+    dequeue() {
+        return this.queue.shift(); // Eliminar y devolver el primer mensaje de la cola
+    }
+
+    isEmpty() {
+        return this.queue.length === 0;
+    }
+}
+
+const messageQueue = new MessageQueue();
 
 // Manejo de conexiones de Socket.IO
 io.on('connection', (socket) => {
     console.log('Un usuario se conectó:', socket.id);
 
     // Enviar mensajes previos al cliente
-    socket.emit('previousMessages', messageQueue);
+    socket.emit('previousMessages', messageQueue.queue);
 
     // Escuchar mensajes enviados desde el cliente
     socket.on('sendMessage', (data) => {
@@ -31,10 +49,10 @@ io.on('connection', (socket) => {
         };
 
         // Agregar mensaje a la cola
-        messageQueue.push(message);
+        messageQueue.enqueue(message);
 
-        // Emitir el mensaje a todos los clientes
-        io.emit('message', message);
+        // Procesar la cola y emitir mensajes
+        processQueue();
     });
 
     socket.on('disconnect', () => {
@@ -42,8 +60,17 @@ io.on('connection', (socket) => {
     });
 });
 
+// Procesar la cola de mensajes con FIFO
+const processQueue = () => {
+    while (!messageQueue.isEmpty()) {
+        const message = messageQueue.dequeue(); // Extraer el primer mensaje de la cola
+        io.emit('message', message); // Emitir mensaje a todos los clientes
+    }
+};
+
 // Iniciar el servidor
 const PORT = 3000;
-server.listen(PORT, () => {
+ser
+ver.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
